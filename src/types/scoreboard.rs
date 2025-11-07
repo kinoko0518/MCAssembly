@@ -1,9 +1,13 @@
 use once_cell::sync::Lazy;
 
 use crate::{
-    Addable, Assignable, Dividable, Multiplicatable, Releasable, Subtractable, Surplusable,
+    Releasable, ScoreAddable, ScoreAssignable, ScoreDividable, ScoreMultiplicatable,
+    ScoreSubtractable, ScoreSurplusable,
+    types::storage::{Storage, StorageType},
 };
 
+/// Objective::Scoreholder in Assembly
+#[derive(Clone)]
 pub struct Scoreboard {
     pub scoreholder: String,
     pub objective: String,
@@ -67,39 +71,61 @@ impl Scoreboard {
             other.objective
         )
     }
+    pub fn get(&self) -> String {
+        format!(
+            "scoreboard players get {} {}",
+            self.scoreholder, self.objective
+        )
+    }
+    pub fn storage_to_score(
+        &self,
+        storage: &Storage,
+        ntb_type: &StorageType,
+        path: &String,
+        magnif: u32,
+    ) -> String {
+        format!(
+            "execute store result storage {} {} {} {} run {}",
+            storage.fullname(),
+            path,
+            ntb_type,
+            magnif,
+            self.get()
+        )
+    }
 }
 
-impl Assignable for Scoreboard {
+impl ScoreAssignable for Scoreboard {
     fn assign(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
         Ok(other.operate("=", other))
     }
 }
 
-impl Addable for Scoreboard {
+impl ScoreAddable for Scoreboard {
     fn add(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
         Ok(other.operate("+=", other))
     }
 }
 
-impl Subtractable for Scoreboard {
+impl ScoreSubtractable for Scoreboard {
     fn sub(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
         Ok(other.operate("-=", other))
     }
 }
 
-impl Multiplicatable for Scoreboard {
+impl ScoreMultiplicatable for Scoreboard {
     fn mul(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
         Ok(other.operate("*=", other))
     }
 }
 
-impl Dividable for Scoreboard {
+impl ScoreDividable for Scoreboard {
     fn div(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
         Ok(other.operate("/=", other))
     }
 }
 
-impl Surplusable for Scoreboard {
+impl ScoreSurplusable for Scoreboard {
     fn sur(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
         Ok(other.operate("%=", other))
     }

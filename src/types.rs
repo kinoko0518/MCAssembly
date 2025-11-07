@@ -5,11 +5,14 @@ mod storage;
 
 pub use literal::{FltLiteral, IntLiteral};
 pub use opecode::{
-    Addable, Assignable, Dividable, Multiplicatable, Releasable, Subtractable, Surplusable,
+    Mnemonic, Releasable, ScoreAddable, ScoreAssignable, ScoreDividable, ScoreMultiplicatable,
+    ScoreSubtractable, ScoreSurplusable,
 };
 pub use scoreboard::{ACM, Scoreboard};
 
 #[derive(Debug)]
 pub enum MCAsmError {
-    NarrowingConversionError,
+    NarrowingConversion,
+    InvalidAssignment,
+    EmptyLineGiven,
 }

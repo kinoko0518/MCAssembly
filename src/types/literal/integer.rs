@@ -10,29 +10,29 @@ impl From<i64> for IntLiteral {
     }
 }
 
-impl Assignable for IntLiteral {
+impl ScoreAssignable for IntLiteral {
     fn assign(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
         if self.data < (i32::MAX as i64) {
             Ok(scoreboard.set(self.data as i32))
         } else {
-            Err(MCAsmError::NarrowingConversionError)
+            Err(MCAsmError::NarrowingConversion)
         }
     }
 }
 
-impl Addable for IntLiteral {
+impl ScoreAddable for IntLiteral {
     fn add(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
         Ok(scoreboard.add(self.data as i32))
     }
 }
 
-impl Subtractable for IntLiteral {
+impl ScoreSubtractable for IntLiteral {
     fn sub(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
         Ok(scoreboard.remove(self.data as i32))
     }
 }
 
-impl Multiplicatable for IntLiteral {
+impl ScoreMultiplicatable for IntLiteral {
     fn mul(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
         Ok(format!(
             "{}\n{}",
@@ -42,7 +42,7 @@ impl Multiplicatable for IntLiteral {
     }
 }
 
-impl Dividable for IntLiteral {
+impl ScoreDividable for IntLiteral {
     fn div(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
         Ok(format!(
             "{}\n{}",
@@ -52,7 +52,7 @@ impl Dividable for IntLiteral {
     }
 }
 
-impl Surplusable for IntLiteral {
+impl ScoreSurplusable for IntLiteral {
     fn sur(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
         Ok(format!(
             "{}\n{}",
