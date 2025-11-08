@@ -49,7 +49,7 @@ pub enum Mnemonic {
     Add((Scoreboard, Box<dyn ScoreAddable>)),
     /// Subtraction Mnemonic
     ///
-    /// Sub <Scoreboard> <Source>
+    /// SUB <Scoreboard> <Source>
     Sub((Scoreboard, Box<dyn ScoreSubtractable>)),
     /// Multiplication Mnemonic
     ///
@@ -65,12 +65,12 @@ pub enum Mnemonic {
     Sur((Scoreboard, Box<dyn ScoreSurplusable>)),
     /// NBT to Score Mnemonic
     ///
-    /// NTS <Scoreboard> <StorageName> <NBTPath> <Magnification>
-    Nts((Scoreboard, Storage, String, u32)),
+    /// NTS <Scoreboard> <StorageName> <NBTPath & Datatype(Unused)> <Magnification>
+    Nts((Scoreboard, Storage, Path, u32)),
     /// Score to NBT Mnemonic
     ///
-    /// STN <Scoreboard> <Type> <StorageName> <NBTPath> <Magnification>
-    Stn((Storage, Scoreboard, StorageType, String, u32)),
+    /// STN <StorageName> <NBTPath & Datatype> <Scoreboard> <Magnification>
+    Stn((Storage, Path, Scoreboard, u32)),
     /// Release Mnemoric
     ///
     /// REL <Scoreboard>
@@ -90,10 +90,10 @@ impl Mnemonic {
             Self::Sur((score, source)) => source.sur(score),
 
             Self::Nts((score, storage, path, magnif)) => {
-                storage.store_to_score(score, path, *magnif)
+                Ok(storage.store_to_score(score, &path.path, *magnif))
             }
-            Self::Stn((storage, score, ntb_type, path, magnif)) => {
-                Ok(score.storage_to_score(storage, ntb_type, path, *magnif))
+            Self::Stn((storage, path, score, magnif)) => {
+                Ok(score.storage_to_score(storage, &path.type_annotation, &path.path, *magnif))
             }
 
             Self::Rel(releasable) => Ok(releasable.rel()),

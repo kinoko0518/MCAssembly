@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
 
 use crate::{
-    Releasable, ScoreAddable, ScoreAssignable, ScoreDividable, ScoreMultiplicatable,
+    MCAsmError, Releasable, ScoreAddable, ScoreAssignable, ScoreDividable, ScoreMultiplicatable,
     ScoreSubtractable, ScoreSurplusable,
     types::storage::{Storage, StorageType},
 };
@@ -15,14 +15,8 @@ pub struct Scoreboard {
 
 /// A special scoreboard to be used to literal score conversion.
 pub static LSC: Lazy<Scoreboard> = Lazy::new(|| Scoreboard {
-    scoreholder: "MC_ASM".into(),
-    objective: "LITERAL_SCORE_CONVERSION".into(),
-});
-
-/// A special scoreboard to be used as accumulator.
-pub static ACM: Lazy<Scoreboard> = Lazy::new(|| Scoreboard {
-    scoreholder: "MC_ASM".into(),
-    objective: "ACCUMULATOR".into(),
+    scoreholder: "LITERAL_SCORE_CONVERSION".into(),
+    objective: "MC_ASM".into(),
 });
 
 impl Scoreboard {
@@ -31,6 +25,14 @@ impl Scoreboard {
             scoreholder: scoreholder.into(),
             objective: objective.into(),
         }
+    }
+    pub fn try_from(from: &str) -> Result<Self, MCAsmError> {
+        from.split_once("::")
+            .map(|(objective, scoreholder)| Self {
+                scoreholder: scoreholder.into(),
+                objective: objective.into(),
+            })
+            .ok_or(MCAsmError::InvalidScoreboard)
     }
     /// Unsafe!
     pub fn set(&self, source: i32) -> String {
