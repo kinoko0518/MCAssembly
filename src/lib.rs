@@ -35,33 +35,31 @@ mod tests {
 
     #[test]
     fn parse_test() {
+        let expected_result:String = "
+            scoreboard players operation #A mcasm = #B mcasm
+            scoreboard players operation #A mcasm += #C mcasm
+            scoreboard players set LITERAL_SCORE_CONVERSION MC_ASM 3
+            scoreboard players operation #A mcasm *= LITERAL_SCORE_CONVERSION MC_ASM
+            scoreboard players reset #A mcasm
+            execute store result score #D mcasm run data get mcasm:some path.to.data[0] 1024
+            execute store result storage mcasm:some path.to.data[1] int 1 run scoreboard players get #D mcasm
+        ".lines().map(|s| s.trim()).filter(|s| !s.is_empty()).collect::<Vec<&str>>().join("\n");
         let source = "
-            DEF mcasm::A mcasm::B
-            ADD mcasm::A mcasm::C
-            MUL mcasm::A 3
+            DEF mcasm::#A mcasm::#B
+            ADD mcasm::#A mcasm::#C
+            MUL mcasm::#A 3
 
-            REL mcasm::A
+            REL mcasm::#A
 
-            NTS mcasm::D mcasm:some path.to.data[0]::<float> 1024
-            STN mcasm:some path.to.data[1] mcasm::D 1
+            NTS mcasm::#D mcasm:some path.to.data[0]::<float> 1024
+            STN mcasm:some path.to.data[1] mcasm::#D 1
         ";
-        println!(
-            "{}",
-            match parse(source) {
-                Ok(o) => o
-                    .iter()
-                    .filter_map(|mnemonic| mnemonic.to_string().ok())
-                    .collect::<Vec<String>>()
-                    .join("\n"),
-                Err(e) => e
-                    .iter()
-                    .map(|(index, error)| format!(
-                        "An error occured at line {}: {:?}",
-                        index, error
-                    ))
-                    .collect::<Vec<String>>()
-                    .join("\n"),
-            }
-        );
+        let stringfied = parse(source)
+            .unwrap()
+            .iter()
+            .map(|mnemonic| mnemonic.to_string().unwrap())
+            .collect::<Vec<String>>()
+            .join("\n");
+        assert_eq!(stringfied, expected_result);
     }
 }

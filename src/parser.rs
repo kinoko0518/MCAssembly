@@ -12,10 +12,51 @@ fn score_and_score_or_integer(
             Scoreboard::try_from(operand2),
             operand2.parse::<i64>(),
         ) {
-            (Ok(score1), Ok(score2), _) => Ok(score_score_closure(score1, score2)),
             (Ok(score1), _, Ok(int_literal)) => Ok(score_int_closure(score1, int_literal)),
+            (Ok(score1), Ok(score2), Err(_)) => Ok(score_score_closure(score1, score2)),
             _ => Err(MCAsmError::InvalidOperand),
         }
+    } else {
+        Err(MCAsmError::TooFewOperand)
+    }
+}
+
+fn nbtstorage_to_score(
+    operands: (Option<&&str>, Option<&&str>, Option<&&str>, Option<&&str>),
+) -> Result<Mnemonic, MCAsmError> {
+    if let (Some(s1), Some(s2), Some(s3), Some(s4)) = operands {
+        let score = Scoreboard::try_from(s1)?;
+        let storage = Storage::try_from(s2)?;
+        let path = Path::try_from(s3)?;
+        let magnif = s4
+            .parse::<u32>()
+            .or(Err(MCAsmError::CantImplicateAsUnsignedInteger))?;
+
+        Ok(Mnemonic::Nts((score, storage, path, magnif)))
+    } else {
+        Err(MCAsmError::TooFewOperand)
+    }
+}
+
+fn score_to_nbtstorage(
+    operands: (Option<&&str>, Option<&&str>, Option<&&str>, Option<&&str>),
+) -> Result<Mnemonic, MCAsmError> {
+    if let (Some(s1), Some(s2), Some(s3), Some(s4)) = operands {
+        let storage = Storage::try_from(s1)?;
+        let path = Path::try_from(s2)?;
+        let score = Scoreboard::try_from(s3)?;
+        let magnif = s4
+            .parse::<u32>()
+            .or(Err(MCAsmError::CantImplicateAsUnsignedInteger))?;
+        Ok(Mnemonic::Stn((storage, path, score, magnif)))
+    } else {
+        Err(MCAsmError::TooFewOperand)
+    }
+}
+
+fn release(operand: Option<&&str>) -> Result<Mnemonic, MCAsmError> {
+    if let Some(s1) = operand {
+        Ok(Mnemonic::Rel(Box::new(Scoreboard::try_from(s1)?)))
     } else {
         Err(MCAsmError::TooFewOperand)
     }
@@ -45,50 +86,19 @@ pub fn parse_line(line: &str) -> Result<Mnemonic, MCAsmError> {
         "MUL" => score_source_mnemonic!(Mnemonic::Mul),
         "DIV" => score_source_mnemonic!(Mnemonic::Div),
         "SUR" => score_source_mnemonic!(Mnemonic::Sur),
-        "NTS" => {
-            if let (Some(s1), Some(s2), Some(s3), Some(s4)) = (
-                splitten.get(1),
-                splitten.get(2),
-                splitten.get(3),
-                splitten.get(4),
-            ) {
-                let score = Scoreboard::try_from(s1)?;
-                let storage = Storage::try_from(s2)?;
-                let path = Path::try_from(s3)?;
-                let magnif = s4
-                    .parse::<u32>()
-                    .or(Err(MCAsmError::CantImplicateAsUnsignedInteger))?;
-
-                Ok(Mnemonic::Nts((score, storage, path, magnif)))
-            } else {
-                Err(MCAsmError::TooFewOperand)
-            }
-        }
-        "STN" => {
-            if let (Some(s1), Some(s2), Some(s3), Some(s4)) = (
-                splitten.get(1),
-                splitten.get(2),
-                splitten.get(3),
-                splitten.get(4),
-            ) {
-                let storage = Storage::try_from(s1)?;
-                let path = Path::try_from(s2)?;
-                let score = Scoreboard::try_from(s3)?;
-                let magnif = s4
-                    .parse::<u32>()
-                    .or(Err(MCAsmError::CantImplicateAsUnsignedInteger))?;
-                Ok(Mnemonic::Stn((storage, path, score, magnif)))
-            } else {
-                Err(MCAsmError::TooFewOperand)
-            }
-        }
-        "REL" => {
-            if let Some(s1) = splitten.get(1) {
-                Ok(Mnemonic::Rel(Box::new(Scoreboard::try_from(s1)?)))
-            } else {
-                Err(MCAsmError::TooFewOperand)
-            }
-        }
+        "NTS" => nbtstorage_to_score((
+            splitten.get(1),
+            splitten.get(2),
+            splitten.get(3),
+            splitten.get(4),
+        )),
+        "STN" => score_to_nbtstorage((
+            splitten.get(1),
+            splitten.get(2),
+            splitten.get(3),
+            splitten.get(4),
+        )),
+        "REL" => release(splitten.get(1)),
         _ => Err(MCAsmError::UnknownMnemonic),
     }
 }
@@ -102,6 +112,7 @@ pub fn parse(mcassembly: &str) -> Result<Vec<Mnemonic>, Vec<(usize, MCAsmError)>
         .map(|s| s.trim())
         .enumerate()
         .filter(|(_, s)| !s.is_empty())
+        .filter(|(_, s)| !s.starts_with("//"))
     {
         match parse_line(line) {
             Ok(o) => mnemonics.push(o),

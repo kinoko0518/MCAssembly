@@ -99,37 +99,37 @@ impl Scoreboard {
 
 impl ScoreAssignable for Scoreboard {
     fn assign(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("=", other))
+        Ok(other.operate("=", self))
     }
 }
 
 impl ScoreAddable for Scoreboard {
     fn add(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("+=", other))
+        Ok(other.operate("+=", self))
     }
 }
 
 impl ScoreSubtractable for Scoreboard {
     fn sub(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("-=", other))
+        Ok(other.operate("-=", self))
     }
 }
 
 impl ScoreMultiplicatable for Scoreboard {
     fn mul(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("*=", other))
+        Ok(other.operate("*=", self))
     }
 }
 
 impl ScoreDividable for Scoreboard {
     fn div(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("/=", other))
+        Ok(other.operate("/=", self))
     }
 }
 
 impl ScoreSurplusable for Scoreboard {
     fn sur(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("%=", other))
+        Ok(other.operate("%=", self))
     }
 }
 

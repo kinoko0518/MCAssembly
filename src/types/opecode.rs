@@ -1,8 +1,5 @@
 use super::Scoreboard;
-use crate::types::{
-    storage::{Storage, StorageType},
-    *,
-};
+use crate::types::{storage::Storage, *};
 
 pub trait ScoreAssignable {
     fn assign(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError>;

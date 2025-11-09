@@ -1,5 +1,6 @@
 use crate::types::{scoreboard::LSC, *};
 
+#[derive(Clone)]
 pub struct IntLiteral {
     data: i64,
 }
