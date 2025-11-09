@@ -12,6 +12,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CRATE_NAME: MCAssembly
+  BIN_NAME: mcasm
   ARTIFACT_FILENAME: MCAssembly-${{ github.sha_short }}
 
 jobs:
@@ -48,7 +49,7 @@ jobs:
 
       # プロジェクトをビルド
       - name: Build
-        run: cargo build --release --bin cui --verbose
+        run: cargo build --release --bin {{ BIN_NAME }} --verbose
 
       # ビルドされた実行ファイルをアーティファクトとしてアップロード
       - name: Upload artifact
@@ -57,8 +58,8 @@ jobs:
           # アーティファクト名をOSごとに設定
           name: ${{ env.ARTIFACT_FILENAME }}-${{ runner.os }}
           path: |
-            target/release/cui
-            target/release/cui.exe
+            target/release/{{ BIN_NAME }}
+            target/release/{{ BIN_NAME }}.exe
           # 実行ファイルが見つからなくてもエラーにしない (OSによって拡張子の有無が違うため)
           if-no-files-found: ignore
 
