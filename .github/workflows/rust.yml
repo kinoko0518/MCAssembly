@@ -57,8 +57,8 @@ jobs:
           # アーティファクト名をOSごとに設定
           name: ${{ env.ARTIFACT_FILENAME }}-${{ runner.os }}
           path: |
-            target/release/$cui
-            target/release/$cui.exe
+            target/release/cui
+            target/release/cui.exe
           # 実行ファイルが見つからなくてもエラーにしない (OSによって拡張子の有無が違うため)
           if-no-files-found: ignore
 
