@@ -11,5 +11,5 @@ regex = "1.12.2"
 tempfile = "3.23.0"
 
 [[bin]]
-name="cui"
-path="src/cui.rs"
+name="mcasm"
+path="src/mcasm.rs"

@@ -67,7 +67,7 @@ pub enum Mnemonic {
     /// Score to NBT Mnemonic
     ///
     /// STN <StorageName> <NBTPath & Datatype> <Scoreboard> <Magnification>
-    Stn((Storage, Path, Scoreboard, u32)),
+    Stn((Storage, Path, Scoreboard, f32)),
     /// Release Mnemoric
     ///
     /// REL <Scoreboard>

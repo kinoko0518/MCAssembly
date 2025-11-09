@@ -46,7 +46,7 @@ fn score_to_nbtstorage(
         let path = Path::try_from(s2)?;
         let score = Scoreboard::try_from(s3)?;
         let magnif = s4
-            .parse::<u32>()
+            .parse::<f32>()
             .or(Err(MCAsmError::CantImplicateAsUnsignedInteger))?;
         Ok(Mnemonic::Stn((storage, path, score, magnif)))
     } else {

@@ -84,7 +84,7 @@ impl Scoreboard {
         storage: &Storage,
         ntb_type: &StorageType,
         path: &String,
-        magnif: u32,
+        magnif: f32,
     ) -> String {
         format!(
             "execute store result storage {} {} {} {} run {}",
