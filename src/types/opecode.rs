@@ -1,6 +1,3 @@
-
-use once_cell::unsync::Lazy;
-
 use super::Scoreboard;
 use crate::types::{storage::Storage, *};
 
@@ -30,6 +27,15 @@ pub trait ScoreSurplusable {
 
 pub trait Releasable {
     fn rel(&self) -> String;
+}
+
+pub trait ScoreCompareble {
+    fn cmp(
+        &self,
+        unless: bool,
+        comparison: &str,
+        scoreboard: &Scoreboard,
+    ) -> Result<String, MCAsmError>;
 }
 
 pub enum Mnemonic {
@@ -78,81 +84,23 @@ pub enum Mnemonic {
     /// Jump if Equal
     ///
     /// JE <Source> <Source> <Mnemonic>
-    Je(
-        (
-            Box<dyn ScoreAssignable>,
-            Box<dyn ScoreSubtractable>,
-            Box<Mnemonic>,
-        ),
-    ),
+    Je((Scoreboard, Box<dyn ScoreCompareble>, Box<Mnemonic>)),
     /// Jump if Not Equal
     ///
     /// JNE <Source> <Source> <Mnemonic>
-    Jne(
-        (
-            Box<dyn ScoreAssignable>,
-            Box<dyn ScoreSubtractable>,
-            Box<Mnemonic>,
-        ),
-    ),
+    Jne((Scoreboard, Box<dyn ScoreCompareble>, Box<Mnemonic>)),
     /// Jump if Less Than
     ///
     /// JL <Source> <Source> <Mnemonic>
-    Jl(
-        (
-            Box<dyn ScoreAssignable>,
-            Box<dyn ScoreSubtractable>,
-            Box<Mnemonic>,
-        ),
-    ),
+    Jl((Scoreboard, Box<dyn ScoreCompareble>, Box<Mnemonic>)),
     /// Jump if Greater Than
     ///
     /// JG <Source> <Source> <Mnemonic>
-    Jg(
-        (
-            Box<dyn ScoreAssignable>,
-            Box<dyn ScoreSubtractable>,
-            Box<Mnemonic>,
-        ),
-    ),
-}
-
-const CMP_TEMP: Lazy<Scoreboard> = Lazy::new(|| Scoreboard::new("CMP_TEMP", "MC_ASM"));
-const ZERO: Lazy<Scoreboard> = Lazy::new(|| Scoreboard::new("ZERO_CONST", "MC_ASM"));
-
-fn execute_compare(
-    is_unless: bool,
-    lhs: &Scoreboard,
-    comparison: &str,
-    rhs: &Scoreboard,
-) -> String {
-    format!(
-        "{} score {} {} {} {} {}",
-        if is_unless { "unless" } else { "if" },
-        lhs.scoreholder,
-        lhs.objective,
-        comparison,
-        rhs.scoreholder,
-        rhs.objective
-    )
+    Jg((Scoreboard, Box<dyn ScoreCompareble>, Box<Mnemonic>)),
 }
 
 impl Mnemonic {
     pub fn to_string(&self) -> Result<String, MCAsmError> {
-        let compare = |unless: bool,
-                       lhs: &Box<dyn ScoreAssignable>,
-                       comparison: &str,
-                       rhs: &Box<dyn ScoreSubtractable>,
-                       mnemonic: &Mnemonic| {
-            Ok(format!(
-                "{}\n{}\n{}\n{} run {}",
-                Mnemonic::Mov((CMP_TEMP.clone(), Box::new(IntLiteral::from(0)))).to_string()?,
-                lhs.assign(&CMP_TEMP)?,
-                rhs.sub(&CMP_TEMP)?,
-                execute_compare(unless, &*CMP_TEMP, comparison, &*ZERO),
-                mnemonic.to_string()?
-            ))
-        };
         match self {
             Self::Def((score, assignable)) => assignable.assign(score),
             Self::Mov((score, assignable)) => assignable.assign(score),
@@ -172,10 +120,26 @@ impl Mnemonic {
 
             Self::Rel(releasable) => Ok(releasable.rel()),
 
-            Self::Je((lhs, rhs, mnemonic)) => compare(false, lhs, "=", rhs, mnemonic),
-            Self::Jne((lhs, rhs, mnemonic)) => compare(true, lhs, "=", rhs, mnemonic),
-            Self::Jl((lhs, rhs, mnemonic)) => compare(true, lhs, "<", rhs, mnemonic),
-            Self::Jg((lhs, rhs, mnemonic)) => compare(true, lhs, ">", rhs, mnemonic),
+            Self::Je((lhs, rhs, mnemonic)) => Ok(format!(
+                "{}\n{}",
+                rhs.cmp(false, "=", lhs)?,
+                mnemonic.to_string()?
+            )),
+            Self::Jne((lhs, rhs, mnemonic)) => Ok(format!(
+                "{}\n{}",
+                rhs.cmp(true, "=", lhs)?,
+                mnemonic.to_string()?
+            )),
+            Self::Jl((lhs, rhs, mnemonic)) => Ok(format!(
+                "{}\n{}",
+                rhs.cmp(false, "<", lhs)?,
+                mnemonic.to_string()?
+            )),
+            Self::Jg((lhs, rhs, mnemonic)) => Ok(format!(
+                "{}\n{}",
+                rhs.cmp(false, ">", lhs)?,
+                mnemonic.to_string()?
+            )),
         }
     }
 }

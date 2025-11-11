@@ -3,7 +3,10 @@ use once_cell::sync::Lazy;
 use crate::{
     MCAsmError, Releasable, ScoreAddable, ScoreAssignable, ScoreDividable, ScoreMultiplicatable,
     ScoreSubtractable, ScoreSurplusable,
-    types::storage::{Storage, StorageType},
+    types::{
+        opecode::ScoreCompareble,
+        storage::{Storage, StorageType},
+    },
 };
 
 /// Objective::Scoreholder in Assembly
@@ -73,6 +76,18 @@ impl Scoreboard {
             other.objective
         )
     }
+    /// Unsafe!
+    pub fn compare(&self, is_unless: bool, comparison: &str, lhs: &Scoreboard) -> String {
+        format!(
+            "{} score {} {} {} {} {}",
+            if is_unless { "unless" } else { "if" },
+            lhs.scoreholder,
+            lhs.objective,
+            comparison,
+            self.scoreholder,
+            self.objective,
+        )
+    }
     pub fn get(&self) -> String {
         format!(
             "scoreboard players get {} {}",
@@ -136,5 +151,11 @@ impl ScoreSurplusable for Scoreboard {
 impl Releasable for Scoreboard {
     fn rel(&self) -> String {
         self.free()
+    }
+}
+
+impl ScoreCompareble for Scoreboard {
+    fn cmp(&self, unless: bool, comparison: &str, lhs: &Scoreboard) -> Result<String, MCAsmError> {
+        Ok(lhs.compare(unless, comparison, self))
     }
 }

@@ -1,4 +1,4 @@
-use crate::types::{scoreboard::LSC, *};
+use crate::types::{opecode::ScoreCompareble, scoreboard::LSC, *};
 
 #[derive(Clone)]
 pub struct IntLiteral {
@@ -59,6 +59,21 @@ impl ScoreSurplusable for IntLiteral {
             "{}\n{}",
             LSC.set(self.data as i32),
             scoreboard.operate("%=", &LSC)
+        ))
+    }
+}
+
+impl ScoreCompareble for IntLiteral {
+    fn cmp(
+        &self,
+        unless: bool,
+        comparison: &str,
+        scoreboard: &Scoreboard,
+    ) -> Result<String, MCAsmError> {
+        Ok(format!(
+            "{}\n{}",
+            LSC.set(self.data as i32),
+            scoreboard.compare(unless, comparison, &*LSC)
         ))
     }
 }
