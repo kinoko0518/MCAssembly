@@ -70,15 +70,15 @@ impl Storage {
         scoreboard: &Scoreboard,
         path: &String,
         magnification: u32,
-    ) -> String {
-        format!(
+    ) -> Command {
+        Command::from(format!(
             "execute store result score {} {} run data get {} {} {}",
             scoreboard.scoreholder,
             scoreboard.objective,
             self.fullname(),
             path,
             magnification
-        )
+        ))
     }
 }
 

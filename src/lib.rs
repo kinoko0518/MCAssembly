@@ -6,7 +6,7 @@ pub use types::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::types::Mnemonic;
+    use crate::types::{IntoSingleString, *};
 
     use super::*;
 
@@ -17,7 +17,7 @@ mod tests {
         let b = Scoreboard::new("B", "mcasm");
         let c = Scoreboard::new("C", "mcasm");
 
-        const IDEAL_RESULT: &str = "scoreboard players operation A test = A test\nscoreboard players operation A test += A test\nscoreboard players set MC_ASM LITERAL_SCORE_CONVERSION 3\nscoreboard players operation A test *= MC_ASM LITERAL_SCORE_CONVERSION";
+        const IDEAL_RESULT: &str = "scoreboard players operation A mcasm = B mcasm\nscoreboard players operation A mcasm += C mcasm\nscoreboard players set LITERAL_SCORE_CONVERSION MC_ASM 3\nscoreboard players operation A mcasm *= LITERAL_SCORE_CONVERSION MC_ASM";
 
         assert_eq!(
             [
@@ -26,9 +26,8 @@ mod tests {
                 Mnemonic::Mul((a, Box::new(IntLiteral::from(3))))
             ]
             .iter()
-            .map(|opecode| opecode.to_string().unwrap())
-            .collect::<Vec<String>>()
-            .join("\n"),
+            .flat_map(|opecode| opecode.to_qualified().unwrap())
+            .into_single_string(),
             IDEAL_RESULT.to_string()
         );
     }
@@ -56,10 +55,9 @@ mod tests {
         ";
         let stringfied = parse(source)
             .unwrap()
-            .iter()
-            .map(|mnemonic| mnemonic.to_string().unwrap())
-            .collect::<Vec<String>>()
-            .join("\n");
+            .into_iter()
+            .flat_map(|mnemonic| mnemonic.to_qualified().unwrap())
+            .into_single_string();
         assert_eq!(stringfied, expected_result);
     }
 }

@@ -1,8 +1,8 @@
 use once_cell::sync::Lazy;
 
 use crate::{
-    MCAsmError, Releasable, ScoreAddable, ScoreAssignable, ScoreDividable, ScoreMultiplicatable,
-    ScoreSubtractable, ScoreSurplusable,
+    Command, Condition, MCAsmError, Qualified, Releasable, ScoreAddable, ScoreAssignable,
+    ScoreDividable, ScoreMultiplicatable, ScoreSubtractable, ScoreSurplusable,
     types::{
         opecode::ScoreCompareble,
         storage::{Storage, StorageType},
@@ -38,47 +38,47 @@ impl Scoreboard {
             .ok_or(MCAsmError::InvalidScoreboard)
     }
     /// Unsafe!
-    pub fn set(&self, source: i32) -> String {
-        format!(
+    pub fn set(&self, source: i32) -> Command {
+        Command::from(format!(
             "scoreboard players set {} {} {}",
             self.scoreholder, self.objective, source
-        )
+        ))
     }
     /// Unsafe!
-    pub fn add(&self, source: i32) -> String {
-        format!(
+    pub fn add(&self, source: i32) -> Command {
+        Command::from(format!(
             "scoreboard players add {} {} {}",
             self.scoreholder, self.objective, source
-        )
+        ))
     }
     /// Unsafe!
-    pub fn remove(&self, source: i32) -> String {
-        format!(
+    pub fn remove(&self, source: i32) -> Command {
+        Command::from(format!(
             "scoreboard players remove {} {} {}",
             self.scoreholder, self.objective, source
-        )
+        ))
     }
     /// Unsafe!
-    pub fn free(&self) -> String {
-        format!(
+    pub fn free(&self) -> Command {
+        Command::from(format!(
             "scoreboard players reset {} {}",
             self.scoreholder, self.objective
-        )
+        ))
     }
     /// Unsafe!
-    pub fn operate(&self, operation: impl Into<String>, other: &Scoreboard) -> String {
-        format!(
+    pub fn operate(&self, operation: impl Into<String>, other: &Scoreboard) -> Command {
+        Command::from(format!(
             "scoreboard players operation {} {} {} {} {}",
             self.scoreholder,
             self.objective,
             operation.into(),
             other.scoreholder,
             other.objective
-        )
+        ))
     }
     /// Unsafe!
-    pub fn compare(&self, is_unless: bool, comparison: &str, lhs: &Scoreboard) -> String {
-        format!(
+    pub fn compare(&self, is_unless: bool, comparison: &str, lhs: &Scoreboard) -> Condition {
+        Condition::from(format!(
             "{} score {} {} {} {} {}",
             if is_unless { "unless" } else { "if" },
             lhs.scoreholder,
@@ -86,13 +86,13 @@ impl Scoreboard {
             comparison,
             self.scoreholder,
             self.objective,
-        )
+        ))
     }
-    pub fn get(&self) -> String {
-        format!(
+    pub fn get(&self) -> Command {
+        Command::from(format!(
             "scoreboard players get {} {}",
             self.scoreholder, self.objective
-        )
+        ))
     }
     pub fn storage_to_score(
         &self,
@@ -107,55 +107,60 @@ impl Scoreboard {
             path,
             ntb_type,
             magnif,
-            self.get()
+            self.get().command
         )
     }
 }
 
 impl ScoreAssignable for Scoreboard {
-    fn assign(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("=", self))
+    fn assign(&self, other: &Scoreboard) -> Result<Vec<Qualified>, super::MCAsmError> {
+        Ok(vec![Qualified::from(other.operate("=", self))])
     }
 }
 
 impl ScoreAddable for Scoreboard {
-    fn add(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("+=", self))
+    fn add(&self, other: &Scoreboard) -> Result<Vec<Qualified>, super::MCAsmError> {
+        Ok(vec![Qualified::from(other.operate("+=", self))])
     }
 }
 
 impl ScoreSubtractable for Scoreboard {
-    fn sub(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("-=", self))
+    fn sub(&self, other: &Scoreboard) -> Result<Vec<Qualified>, super::MCAsmError> {
+        Ok(vec![Qualified::from(other.operate("-=", self))])
     }
 }
 
 impl ScoreMultiplicatable for Scoreboard {
-    fn mul(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("*=", self))
+    fn mul(&self, other: &Scoreboard) -> Result<Vec<Qualified>, super::MCAsmError> {
+        Ok(vec![Qualified::from(other.operate("*=", self))])
     }
 }
 
 impl ScoreDividable for Scoreboard {
-    fn div(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("/=", self))
+    fn div(&self, other: &Scoreboard) -> Result<Vec<Qualified>, super::MCAsmError> {
+        Ok(vec![Qualified::from(other.operate("/=", self))])
     }
 }
 
 impl ScoreSurplusable for Scoreboard {
-    fn sur(&self, other: &Scoreboard) -> Result<String, super::MCAsmError> {
-        Ok(other.operate("%=", self))
+    fn sur(&self, other: &Scoreboard) -> Result<Vec<Qualified>, super::MCAsmError> {
+        Ok(vec![Qualified::from(other.operate("%=", self))])
     }
 }
 
 impl Releasable for Scoreboard {
-    fn rel(&self) -> String {
-        self.free()
+    fn rel(&self) -> Vec<Qualified> {
+        vec![Qualified::from(self.free())]
     }
 }
 
 impl ScoreCompareble for Scoreboard {
-    fn cmp(&self, unless: bool, comparison: &str, lhs: &Scoreboard) -> Result<String, MCAsmError> {
-        Ok(lhs.compare(unless, comparison, self))
+    fn cmp(
+        &self,
+        unless: bool,
+        comparison: &str,
+        lhs: &Scoreboard,
+    ) -> Result<(Vec<Qualified>, Condition), MCAsmError> {
+        Ok((vec![], lhs.compare(unless, comparison, self)))
     }
 }

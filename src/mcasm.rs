@@ -1,5 +1,5 @@
 use colored::Colorize;
-use mc_assembly::{MCAsmError, Mnemonic};
+use mc_assembly::{IntoSingleString, MCAsmError, Mnemonic};
 use std::env;
 use std::error::Error;
 use std::io::Read;
@@ -9,9 +9,9 @@ fn show_compiled_mcfunction(assembly: &str) -> Result<String, String> {
     let result = mc_assembly::parse(&assembly);
     let show_ok_as_string = |arg: Vec<Mnemonic>| {
         arg.iter()
-            .filter_map(|mnemonic| mnemonic.to_string().ok())
-            .collect::<Vec<String>>()
-            .join("\n")
+            .filter_map(|mnemonic| mnemonic.to_qualified().ok())
+            .flatten()
+            .into_single_string()
     };
     let show_err_as_string = |e: Vec<(usize, MCAsmError)>| {
         e.iter()

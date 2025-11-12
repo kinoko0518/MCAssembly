@@ -12,9 +12,9 @@ impl From<i64> for IntLiteral {
 }
 
 impl ScoreAssignable for IntLiteral {
-    fn assign(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
+    fn assign(&self, scoreboard: &Scoreboard) -> Result<Vec<Qualified>, MCAsmError> {
         if self.data < (i32::MAX as i64) {
-            Ok(scoreboard.set(self.data as i32))
+            Ok(vec![Qualified::from(scoreboard.set(self.data as i32))])
         } else {
             Err(MCAsmError::NarrowingConversion)
         }
@@ -22,44 +22,41 @@ impl ScoreAssignable for IntLiteral {
 }
 
 impl ScoreAddable for IntLiteral {
-    fn add(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
-        Ok(scoreboard.add(self.data as i32))
+    fn add(&self, scoreboard: &Scoreboard) -> Result<Vec<Qualified>, MCAsmError> {
+        Ok(vec![Qualified::from(scoreboard.add(self.data as i32))])
     }
 }
 
 impl ScoreSubtractable for IntLiteral {
-    fn sub(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
-        Ok(scoreboard.remove(self.data as i32))
+    fn sub(&self, scoreboard: &Scoreboard) -> Result<Vec<Qualified>, MCAsmError> {
+        Ok(vec![Qualified::from(scoreboard.remove(self.data as i32))])
     }
 }
 
 impl ScoreMultiplicatable for IntLiteral {
-    fn mul(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
-        Ok(format!(
-            "{}\n{}",
-            LSC.set(self.data as i32),
-            scoreboard.operate("*=", &LSC)
-        ))
+    fn mul(&self, scoreboard: &Scoreboard) -> Result<Vec<Qualified>, MCAsmError> {
+        Ok(vec![
+            Qualified::from(LSC.set(self.data as i32)),
+            Qualified::from(scoreboard.operate("*=", &LSC)),
+        ])
     }
 }
 
 impl ScoreDividable for IntLiteral {
-    fn div(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
-        Ok(format!(
-            "{}\n{}",
-            LSC.set(self.data as i32),
-            scoreboard.operate("/=", &LSC)
-        ))
+    fn div(&self, scoreboard: &Scoreboard) -> Result<Vec<Qualified>, MCAsmError> {
+        Ok(vec![
+            Qualified::from(LSC.set(self.data as i32)),
+            Qualified::from(scoreboard.operate("/=", &LSC)),
+        ])
     }
 }
 
 impl ScoreSurplusable for IntLiteral {
-    fn sur(&self, scoreboard: &Scoreboard) -> Result<String, MCAsmError> {
-        Ok(format!(
-            "{}\n{}",
-            LSC.set(self.data as i32),
-            scoreboard.operate("%=", &LSC)
-        ))
+    fn sur(&self, scoreboard: &Scoreboard) -> Result<Vec<Qualified>, MCAsmError> {
+        Ok(vec![
+            Qualified::from(LSC.set(self.data as i32)),
+            Qualified::from(scoreboard.operate("%=", &LSC)),
+        ])
     }
 }
 
@@ -69,11 +66,10 @@ impl ScoreCompareble for IntLiteral {
         unless: bool,
         comparison: &str,
         scoreboard: &Scoreboard,
-    ) -> Result<String, MCAsmError> {
-        Ok(format!(
-            "{}\n{}",
-            LSC.set(self.data as i32),
-            scoreboard.compare(unless, comparison, &*LSC)
+    ) -> Result<(Vec<Qualified>, Condition), MCAsmError> {
+        Ok((
+            vec![Qualified::from(LSC.set(self.data as i32))],
+            scoreboard.compare(unless, comparison, &*LSC),
         ))
     }
 }
